@@ -1,7 +1,15 @@
 import numpy as np
 import pandas as pd
+import pytest
 
-from forecasting import build_features, ewma_forecast, naive_persistence_forecast, train_test_columns, walk_forward_evaluate
+from forecasting import (
+    build_features,
+    ewma_forecast,
+    feature_importances,
+    naive_persistence_forecast,
+    train_test_columns,
+    walk_forward_evaluate,
+)
 
 
 def make_ohlc(n=300, seed=0):
@@ -24,3 +32,16 @@ def test_walk_forward_evaluate_returns_one_row_per_fold():
     results = walk_forward_evaluate(X, y, naive, ewma, n_splits=4)
     assert len(results) == 4
     assert (results[["rmse_ml", "rmse_naive", "rmse_ewma"]] >= 0).all().all()
+
+
+def test_feature_importances_includes_baseline_features_and_sums_to_one():
+    ohlc = make_ohlc()
+    data = build_features(ohlc, windows=(5, 10, 20), horizon=10)
+    X, y = train_test_columns(data)
+    naive = naive_persistence_forecast(data)
+    ewma = ewma_forecast(ohlc, span=20).loc[data.index]
+
+    importances = feature_importances(X, y, naive, ewma)
+    assert "naive_forecast" in importances.index
+    assert "ewma_forecast" in importances.index
+    assert importances.sum() == pytest.approx(1.0)

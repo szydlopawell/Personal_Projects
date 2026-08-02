@@ -30,5 +30,5 @@ print("\nMean across folds:")
 means = results[["rmse_ml", "rmse_naive", "rmse_ewma", "mae_ml", "mae_naive", "mae_ewma"]].mean()
 print(means.to_string())
 
-print("\nRandom Forest feature importances (fit on full sample, for inspection only):")
-print(feature_importances(X, y).to_string())
+print("\nGradient Boosting feature importances (fit on full sample, for inspection only):")
+print(feature_importances(X, y, naive, ewma).to_string())
